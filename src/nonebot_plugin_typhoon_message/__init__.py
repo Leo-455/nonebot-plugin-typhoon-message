@@ -1,4 +1,4 @@
-from nonebot import logger, require
+from nonebot import logger, require, get_driver
 from nonebot.plugin import PluginMetadata, inherit_supported_adapters
 
 require("nonebot_plugin_uninfo")
@@ -6,10 +6,11 @@ require("nonebot_plugin_alconna")
 require("nonebot_plugin_localstore")
 require("nonebot_plugin_apscheduler")
 from .config import Config
+from .main import main
 
 __plugin_meta__ = PluginMetadata(
-    name="名称",
-    description="描述",
+    name="台风信息解析推送",
+    description="爬取并解析中央气象台台风报文",
     usage="用法",
     type="application",  # library
     homepage="https://github.com/Leo-455/nonebot-plugin-typhoon-message",
@@ -18,7 +19,7 @@ __plugin_meta__ = PluginMetadata(
         "nonebot_plugin_alconna", "nonebot_plugin_uninfo"
     ),
     # supported_adapters={"~onebot.v11"}, # 仅 onebot
-    extra={"author": "Leo-455 <your@mail.com>"},
+    extra={"author": "Leo-455 Leo_455@163.com"},
 )
 
 from arclet.alconna import Args, Option, Alconna, Arparma, Subcommand
@@ -43,3 +44,10 @@ async def _(result: Arparma):
     package: str = result.other_args["package"]
     logger.info(f"installing {package}")
     await UniMessage.text(package).send()
+
+
+driver = get_driver()
+@driver.on_startup
+async def startup():
+    logger.info("start")
+    await main()
