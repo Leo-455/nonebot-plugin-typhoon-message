@@ -105,6 +105,38 @@ class WTPQ20Data(BaseDataModel):
     forecast: Forecast = Field(default_factory=Forecast)
 
 
+class TCPQ40Intensity(BaseDataModel):
+    change_24h: str | None = None
+    ci: float | str | None = None
+
+
+class TCPQ40Movement(BaseDataModel):
+    calculate_interval: str | None = None
+    direction: str | None = None
+    speed: int | None = None
+
+
+class TCPQ40Typhoon(BaseDataModel):
+    name: str | None = None
+    cn_name: str | None = None
+    serial: str | None = None
+    geo: GeoPoint = Field(default_factory=GeoPoint)
+    location_accuracy: str | None = None
+    cdo: str | None = None
+    intensity: TCPQ40Intensity = Field(default_factory=TCPQ40Intensity)
+    movement: TCPQ40Movement = Field(default_factory=TCPQ40Movement)
+
+
+class TCPQ40Data(BaseDataModel):
+    agency: str | None = None
+    release_time: ReportTime = Field(default_factory=ReportTime)
+    report_code: str | None = None
+    photo_time: ReportTime = Field(default_factory=ReportTime)
+    station_location: GeoPoint = Field(default_factory=GeoPoint)
+
+    typhoons: list[TCPQ40Typhoon] = Field(default_factory=list)
+
+
 class TyphoonMessage(BaseDataModel):
     schema_version: int = 1
 
