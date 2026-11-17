@@ -82,7 +82,7 @@ class MessageMetadata(BaseDataModel):
     web_published_at: datetime | None = None
 
 
-class TCPQ40Data(BaseDataModel):
+class WTPQ20Data(BaseDataModel):
     agency: str | None = None
 
     release_time: ReportTime = Field(default_factory=ReportTime)
@@ -109,6 +109,6 @@ class TyphoonMessage(BaseDataModel):
     schema_version: int = 1
 
     metadata: MessageMetadata
-    ty_data: TCPQ40Data
+    ty_data: WTPQ20Data | TCPQ40Data
 
     raw_msg: list[str] = Field(default_factory=list)

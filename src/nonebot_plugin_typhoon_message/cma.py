@@ -2,7 +2,7 @@ import re
 
 from nonebot import logger
 
-from .model import TCPQ40Data, WindRadius, ForecastPoint
+from .model import TCPQ40Data, WindRadius, WTPQ20Data, ForecastPoint, TCPQ40Typhoon
 from .utils import parse_geo, current_time, extract_number, timezone_convert
 from .constants import (
     TY_NAME,
@@ -16,8 +16,8 @@ from .constants import (
 )
 
 
-def handle_wtpq20(ty_msg: list[str]) -> TCPQ40Data:
-    ty_data = TCPQ40Data()
+def handle_wtpq20(ty_msg: list[str]) -> WTPQ20Data:
+    ty_data = WTPQ20Data()
     for i, line in enumerate(ty_msg):  # 逐行处理
         line = line.strip()  # 去除首尾空格
         words = line.split()  # 按空格分隔
