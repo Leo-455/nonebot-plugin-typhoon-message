@@ -1,5 +1,3 @@
-import re
-
 from nonebot import logger
 
 from .model import TCPQ40Data, WindRadius, WTPQ20Data, ForecastPoint, TCPQ40Typhoon
@@ -129,77 +127,97 @@ def handle_wtpq20(ty_msg: list[str]) -> WTPQ20Data:
     return ty_data
 
 
-# def handle_tcpq40(ty_msg: list):
-#     utc_year = timezone_convert(
-#         current_time(), "Asia/Shanghai", "UTC", "%Y/%m/%d %H:%M:%S", "%Y"
-#     )
-#     for i, line in enumerate(ty_msg):
-#         line = line.strip()
-#         words = line.split()
+def handle_tcpq40(ty_msg: list[str]) -> TCPQ40Data:
+    ty_data = TCPQ40Data()
+    for i, line in enumerate(ty_msg):
+        line = line.strip()
+        words = line.split()
 
-#         if line == "NNNN":  # 报尾
-#             break
+        if line == "NNNN":  # 报尾
+            break
 
-#         if i == 0:  # 检查报文是否完整
-#             if line != "ZCZC":
-#                 logger.error("CMA TY MSG | 电文错误 未找到报头")
-#         elif i == 1:
-#             real_time = timezone_convert(
-#                 f"{utc_year}{words[2]}",
-#                 "UTC",
-#                 input_time_format="%Y%d%H%M",
-#                 output_time_format="%d日%H时",
-#             )
-#         elif i == 2:
-#             if words[0] == "CCAA":
-#                 title = "陆地测站关于台风的情报"
-#             elif words[0] == "CCBB":
-#                 title = "陆地测站关于重要天气特征的情报"
-#             elif words[0] == "DDAA":
-#                 title = "海洋测站关于台风的情报"
-#             elif words[0] == "DDBB":
-#                 title = "海洋测站关于重要天气特征的情报"
-#             else:
-#                 title = ""
+        if i == 0:  # 检查报文是否完整
+            if line != "ZCZC":
+                logger.error("CMA TY MSG | 电文错误 未找到报头")
+        elif i == 1:
+            if words[0] != "TCPQ40":
+                logger.error(f"报文类型错误：应为TCPQ40 实为{words[0]}")
+            ty_data.agency = words[1]
+            ty_data.release_time.raw = words[2]
+        elif i == 2:
+            # if words[0] == "CCAA":
+            #     title = "陆地测站关于台风的情报"
+            # elif words[0] == "CCBB":
+            #     title = "陆地测站关于重要天气特征的情报"
+            # elif words[0] == "DDAA":
+            #     title = "海洋测站关于台风的情报"
+            # elif words[0] == "DDBB":
+            #     title = "海洋测站关于重要天气特征的情报"
+            # else:
+            #     title = ""
+            ty_data.report_code = words[0]
+            ty_data.photo_time.raw = words[1]
+            lat = words[2]
+            if lat.startswith("99"):
+                ty_data.station_location.lat = int(lat[2:]) / 10
+            lon = words[3]
+            # earth_quadrant = lon[1]
+            ty_data.station_location.lon = int(lon[1:]) / 10
 
-#             output = (
-#                 "CMA 台风报文\n气象卫星云资料的天气说明报告\n"
-#                 f"{title}\n发报时间：{real_time}\n"
-#             )
-#         elif i > 2:  # 第3行之后每行是一个台风信息
-#             try:
-#                 name = TY_NAME[words[0].title()]  # 台风名称
-#             except KeyError:
-#                 name = words[0]
+        elif i > 2:  # 第3行之后每行是一个台风信息
+            typhoons = TCPQ40Typhoon()
+            typhoons.name = words[0]
+            typhoons.cn_name = TY_NAME.get(words[0].title())
 
-#             lat = int(words[1][2:]) / 10
-#             lon = int(words[2][1:]) / 10
-#             location_accuracy = LOCATION_ACCURACY_DESCRIPTION.get(words[3][1])
-#             cdo = CDO_DESCRIPTION.get(words[3][2])
-#             intensity_change = INTENSITY_CHANGE_DESCRIPTION.get(words[3][3])
-#             mv_caculate_timedelta = MV_CACULATE_TIMEDELTA_DESCRIPTION.get(words[3][4])
-#             try:  # 检查CI电码是否是几个特殊值
-#                 ci = CI_DESCRIPTION[words[4][1:3]]
-#             except KeyError:
-#                 ci = int(words[4][1:3]) / 10
+            typhoons.serial = words[1][:2]
+            typhoons.geo.lat = int(words[1][2:]) / 10
 
-#             try:
-#                 mv_direction = words[5][1:3]
-#                 if mv_direction == "00":
-#                     mv_direction = "移向：静止\n"
-#                 elif mv_direction == "//":
-#                     mv_direction = ""
-#                 else:
-#                     mv_direction = f"移向：{mv_direction}0°\n"
+            # earth_quadrant = words[2][0]  # Qc
+            typhoons.geo.lon = int(words[2][1:]) / 10
 
-#                 mv_speed = words[5][-2:]
-#                 if mv_speed == "//":
-#                     mv_speed = ""
-#                 else:
-#                     mv_speed = f"移速：{mv_speed}kt\n"
-#             except KeyError:
-#                 mv_direction = ""
-#                 mv_speed = ""
+            if words[3].startswith("1"):
+                typhoons.location_accuracy = (
+                    LOCATION_ACCURACY_DESCRIPTION.get(words[3][1])
+                    )
+                typhoons.cdo = CDO_DESCRIPTION.get(words[3][2])
+                typhoons.intensity.change_24h = (
+                    INTENSITY_CHANGE_DESCRIPTION.get(words[3][3])
+                )
+                typhoons.movement.calculate_interval = (
+                    MV_CACULATE_TIMEDELTA_DESCRIPTION.get(words[3][4])
+                )
+
+            if words[4].startswith("2") and words[4].endswith("//"):
+                ci = CI_DESCRIPTION.get(words[4][1:3])
+                if ci is not None:
+                    typhoons.intensity.ci = ci
+                else:
+                    typhoons.intensity.ci = int(words[4][1:3]) /10
+
+            # try:
+            #     _ = words[5]
+            # except IndexError:
+            #     continue
+            if len(words) == 6 and words[5].startswith("9"):
+                mv_direction = words[5][1:3]
+                if mv_direction == "00":
+                    typhoons.movement.direction = "静止"
+                elif mv_direction == "//":
+                    typhoons.movement.direction = None
+                else:
+                    typhoons.movement.direction = f"{mv_direction}0"
+
+                mv_speed = words[5][-2:]
+                if mv_speed == "//":
+                    typhoons.movement.speed = None
+                else:
+                    mv_speed = extract_number(mv_speed)
+                    typhoons.movement.speed = (
+                        int(mv_speed) if mv_speed is not None else None
+                    )
+            ty_data.typhoons.append(typhoons)
+
+    return ty_data
 
 
 # def handle_whci40(ty_msg: list):
