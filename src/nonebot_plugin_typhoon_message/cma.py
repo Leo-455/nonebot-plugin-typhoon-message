@@ -194,10 +194,6 @@ def handle_tcpq40(ty_msg: list[str]) -> TCPQ40Data:
                 else:
                     typhoons.intensity.ci = int(words[4][1:3]) /10
 
-            # try:
-            #     _ = words[5]
-            # except IndexError:
-            #     continue
             if len(words) == 6 and words[5].startswith("9"):
                 mv_direction = words[5][1:3]
                 if mv_direction == "00":
