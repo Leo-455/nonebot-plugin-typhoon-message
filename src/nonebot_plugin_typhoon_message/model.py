@@ -17,15 +17,31 @@ class GeoPoint(BaseDataModel):
 
 
 class TyphoonCenter(BaseDataModel):
-    max_wind_speed: float | None = None
-    pressure: int | None = None
+    """WTPQ20 报文台风中心的气象信息"""
+    max_wind_speed: float | None = Field(
+        default=None,
+        description="台风中心附近最大风速，以米／秒 (M/S) 为单位"
+    )
+    pressure: int | None = Field(
+        default=None,
+        description="台风的中心气压，以百帕 (HPA) 为单位"
+    )
 
 
 class Movement(BaseDataModel):
     """WTPQ20 报文台风移动数据"""
-    speed: float | None = None
-    speed_description: str | None = None
-    direction: str | None = None
+    speed: float | None = Field(
+        default=None,
+        description="台风中心移动速度，以公里/小时为单位。"
+    )
+    speed_description: str | None = Field(
+        default=None,
+        description="speed字段为None时 此字段可能为 STATIONARY"
+    )
+    direction: str | None = Field(
+        default=None,
+        description="台风中心移动方向，以16方位表示。 或为 ALMOST"
+    )
 
 
 class WindRadius(BaseDataModel):
@@ -41,14 +57,29 @@ class WindRadius(BaseDataModel):
 
 class WindCircle(BaseDataModel):
     """WTPQ20 报文风圈数据"""
-    kts30: WindRadius | None = None
-    kts50: WindRadius | None = None
-    kts64: WindRadius | None = None
+    kts30: WindRadius | None = Field(
+        default=None,
+        description="30节（七级风）大风圈半径，以公里为单位"
+    )
+    kts50: WindRadius | None = Field(
+        default=None,
+        description="50节（十级风）大风圈半径，以公里为单位"
+    )
+    kts64: WindRadius | None = Field(
+        default=None,
+        description="64节（十二级风）大风圈半径，以公里为单位"
+    )
 
 
 class ForecastCenter(BaseDataModel):
-    pressure: int | None = None  # 单位：HPA
-    max_wind_speed: float | None = None  # 单位：M/S
+    pressure: int | None = Field(
+        default=None,
+        description="台风的中心气压，以百帕 (HPA) 为单位"
+    )  # 单位：HPA
+    max_wind_speed: float | None = Field(
+        default=None,
+        description="台风中心附近最大风速，以米／秒 (M/S) 为单位"
+    )  # 单位：M/S
 
 
 class ForecastPoint(BaseDataModel):
@@ -91,19 +122,34 @@ class MessageMetadata(BaseDataModel):
 
 class WTPQ20Data(BaseDataModel):
     """WTPQ20 报文数据"""
-    agency: str | None = None
+    agency: str | None = Field(
+        default=None,
+        description="发报台字母代号 （通常为BABJ国家气象中心）"
+    )
 
     release_time: ReportTime = Field(default_factory=ReportTime)
     initial_time: ReportTime = Field(default_factory=ReportTime)
 
-    level: str | None = None
+    level: str | None = Field(
+        default=None,
+        description="热带气旋等级名称缩写"
+    )
     level_name: str | None = None
 
-    name: str | None = None
+    name: str | None = Field(
+        default=None,
+        description="台风的英文命名，未命名时为NAMELESS"
+    )
     cn_name: str | None = None
 
-    cma_id: str | None = None
-    international_id: str | None = None
+    cma_id: str | None = Field(
+        default=None,
+        description="国家气象中心的台风编号"
+    )
+    international_id: str | None = Field(
+        default=None,
+        description="台风的国际编号"
+    )
 
     geo: GeoPoint = Field(default_factory=GeoPoint)
     movement: Movement = Field(default_factory=Movement)
@@ -170,7 +216,10 @@ class TCPQ40Typhoon(BaseDataModel):
 
 class TCPQ40Data(BaseDataModel):
     """TCPQ40 报文数据"""
-    agency: str | None = None
+    agency: str | None = Field(
+        default=None,
+        description="发报台字母代号 （通常为BABJ国家气象中心）"
+    )
     release_time: ReportTime = Field(default_factory=ReportTime)
     report_code: str | None = Field(
         default=None,
@@ -181,11 +230,11 @@ class TCPQ40Data(BaseDataModel):
     photo_time: ReportTime = Field(
         default_factory=ReportTime,
         description="气旋照片拍摄时间（通常与发报时间相同）"
-        )
+    )
     station_location: GeoPoint = Field(
         default_factory=GeoPoint,
         description="编报本报告的卫星接收站的位置（通常为固定值）"
-        )
+    )
 
     typhoons: list[TCPQ40Typhoon] = Field(default_factory=list)
 
