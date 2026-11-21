@@ -3,8 +3,8 @@ name = "nonebot-plugin-typhoon-message"
 version = "0.1.0"
 description = "插件描述"
 readme = "README.md"
-requires-python = ">=3.10"
-authors = [{ name = "Leo-455", email = "Leo-455@gmail.com" }]
+requires-python = ">=3.10,<3.15"
+authors = [{ name = "Leo-455", email = "Leo_455@163.com" }]
 dependencies = [
   "beautifulsoup4>=4.15.0",
   "httpx>=0.27.0,<1.0.0",
